@@ -57,7 +57,7 @@ public class VoiceCommands extends ListenerAdapter {
 						event.getJDA().getTextChannelById("703482913403961364").sendMessage(e.toString()).queue();
 						event.getChannel().sendMessage(event.getAuthor().getAsMention()
 								+ ", you wanker!! You have to supply a valid SoundCloud/YouTube URL or search term!!!")
-								.queue();
+						.queue();
 					}
 					break;
 				case "stop":
@@ -189,9 +189,9 @@ public class VoiceCommands extends ListenerAdapter {
 					delete(event);
 				} catch (IndexOutOfBoundsException e) {
 					event.getChannel()
-							.sendMessage(
-									"You bloody imbecile!!! You have to give me the name of a playlist to delete it!!!")
-							.queue();
+					.sendMessage(
+							"You bloody imbecile!!! You have to give me the name of a playlist to delete it!!!")
+					.queue();
 				}
 				break;
 			case "play":
@@ -208,7 +208,7 @@ public class VoiceCommands extends ListenerAdapter {
 	private void list(GuildMessageReceivedEvent event) {
 		try {
 			EmbedBuilder result = new EmbedBuilder();
-			String playlist = event.getMessage().getContentRaw().substring(8);
+			String playlist = event.getMessage().getContentRaw().substring(8).strip();
 			result.setTitle(playlist);
 			int i = 1;
 			for (Song s : trackScheduler.getSongsFromPlaylist(playlist)) {
@@ -216,9 +216,15 @@ public class VoiceCommands extends ListenerAdapter {
 				i++;
 			}
 			result.setFooter("Use $p play " + playlist + " to add this playlist to the queue");
+			result.setColor(0x005420);
 			event.getChannel().sendMessage(result.build()).queue();
 		} catch (IndexOutOfBoundsException e) {
 			trackScheduler.sendPlaylists(event);
+		} catch (NullPointerException e) {
+			event.getChannel()
+			.sendMessage(
+					"Could not find playlist *" + event.getMessage().getContentRaw().substring(8).strip() + "*")
+			.queue();
 		}
 	}
 
@@ -226,22 +232,11 @@ public class VoiceCommands extends ListenerAdapter {
 	private void addSongToPlaylist(GuildMessageReceivedEvent event) {
 		if (event.getMessage().getContentRaw().contains(",")) {
 			try {
+				String[] args = event.getMessage().getContentRaw().split(",");
+				String song = args[0].substring(7).strip();
+				String playlist = args[1].strip();
 
-				String song = "";
-				int index = 7;
-				String message = event.getMessage().getContentRaw();
-				while (message.charAt(index) != ',') {
-					song += message.charAt(index);
-					index++;
-				}
 				System.out.println("Song: " + song);
-
-				String playlist = "";
-				index += 2;
-				while (index < message.length()) {
-					playlist += message.charAt(index);
-					index++;
-				}
 				System.out.println("Playlist: " + playlist);
 
 				if (!isUrl(song)) {
@@ -289,41 +284,33 @@ public class VoiceCommands extends ListenerAdapter {
 	public void delete(GuildMessageReceivedEvent event) {
 		String message = event.getMessage().getContentRaw();
 		if (message.contains(",")) {
-			String playlist = "";
-			int index = 10;
-			while (message.charAt(index) != ',') {
-				playlist += message.charAt(index);
-				index++;
-			}
-			index += 2;
-			String song = "";
-			while (index < message.length()) {
-				song += message.charAt(index);
-				index++;
-			}
+			String[] args = message.split(",");
+			String playlist = args[0].substring(10).strip();
+
+			int song = Integer.parseInt(args[1].replaceAll("[^0-9]", "")) - 1;
+
 			try {
-				index = Integer.parseInt(song) - 1;
-				String removedSong = trackScheduler.getSongsFromPlaylist(playlist).get(index).title;
-				trackScheduler.getSongsFromPlaylist(playlist).remove(index);
+				String removedSong = trackScheduler.getSongsFromPlaylist(playlist).get(song).title;
+				trackScheduler.getSongsFromPlaylist(playlist).remove(song);
 				trackScheduler.writePlaylistsToFile();
 				event.getChannel().sendMessage("*" + removedSong + "* has been removed from *" + playlist + "*")
-						.queue();
+				.queue();
 			} catch (NumberFormatException e) {
 				event.getChannel().sendMessage("You didn't provide me a valid song number, idiot!!").queue();
 			}
 		} else {
-			trackScheduler.deletePlaylist(message.substring(10), event);
+			trackScheduler.deletePlaylist(message.substring(10).strip(), event);
 		}
 	}
 
 	// Adds playlist to queue
 	private void play(GuildMessageReceivedEvent event) {
 		try {
-			connectToVc(event);
 
 			String playlistName = event.getMessage().getContentRaw().substring(8);
 			ArrayList<Song> songs = trackScheduler.getSongsFromPlaylist(playlistName);
 			if (songs != null) {
+				connectToVc(event);
 				@SuppressWarnings("unchecked")
 				ArrayList<Song> songsShuffled = (ArrayList<Song>) songs.clone();
 				Collections.shuffle(songsShuffled);
@@ -352,7 +339,7 @@ public class VoiceCommands extends ListenerAdapter {
 						public void loadFailed(FriendlyException exception) {
 							event.getChannel().sendMessage("Failed to load file").queue();
 							event.getJDA().getTextChannelById("703482913403961364").sendMessage(exception.toString())
-									.queue();
+							.queue();
 							exception.printStackTrace();
 						}
 
@@ -361,14 +348,14 @@ public class VoiceCommands extends ListenerAdapter {
 
 				event.getChannel().sendMessage("Added playlist " + playlistName + " to queue").queue();
 			} else {
-				event.getChannel().sendMessage("I could not find " + playlistName).queue();
+				event.getChannel().sendMessage("I could not find playlist *" + playlistName + "*").queue();
 			}
 
 		} catch (IndexOutOfBoundsException e) {
 			event.getChannel()
-					.sendMessage(
-							"Oh my goodness!! You have to bloody give me the name of the playlist you want to play!!!")
-					.queue();
+			.sendMessage(
+					"Oh my goodness!! You have to bloody give me the name of the playlist you want to play!!!")
+			.queue();
 		}
 	}
 

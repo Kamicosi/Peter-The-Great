@@ -24,9 +24,7 @@ public class TextCommands extends ListenerAdapter {
 	private String battleP1, battleP2;
 
 	public TextCommands() {
-		waitingForBattle = false;
-		battleP1 = "";
-		battleP2 = "";
+		resetBattle();
 
 		profiles = RPGProfile.readProfilesFromFile();
 
@@ -42,41 +40,24 @@ public class TextCommands extends ListenerAdapter {
 	public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
 
 		// add XP
-		if (profiles.get(event.getAuthor().getName()) != null) {
-			profiles.get(event.getAuthor().getName()).handleEvent(event);
+		if (profiles.get(event.getAuthor().getId()) != null) {
+			profiles.get(event.getAuthor().getId()).handleEvent(event);
 		} else {
-			RPGProfile newProfile = null;
-			String oldName = "";
-			for (RPGProfile r : profiles.values()) {
-				if (event.getAuthor().getId().equals(r.getID())) {
-					oldName = r.getName();
-					r.setName(event.getAuthor().getName());
-					newProfile = r;
-					break;
-				}
-			}
-			if (newProfile != null) {
-				profiles.remove(oldName);
-				profiles.put(event.getAuthor().getName(), newProfile);
-			} else {
-				System.out.println("Creating new profile...");
-				profiles.put(event.getAuthor().getName(),
-						new RPGProfile(event.getAuthor().getName(), event.getAuthor().getId()));
-			}
+			System.out.println("Creating new profile...");
+			profiles.put(event.getAuthor().getId(),
+					new RPGProfile(event.getAuthor().getName(), event.getAuthor().getId()));
 		}
 
 		String[] args = event.getMessage().getContentRaw().split(" ");
 
 		// Battle!
-		if (waitingForBattle && event.getAuthor().getName().equals(battleP2)
+		if (waitingForBattle && event.getAuthor().getId().equals(battleP2)
 				&& event.getMessage().getContentRaw().equals("Y")) {
 			executeBattle(event);
-		} else if (waitingForBattle && event.getAuthor().getName().equals(battleP2) // Decline battle
+		} else if (waitingForBattle && event.getAuthor().getId().equals(battleP2) // Decline battle
 				&& event.getMessage().getContentRaw().equals("N")) {
-			event.getChannel().sendMessage(battleP2 + " has declined the battle!").queue();
-			waitingForBattle = false;
-			battleP1 = "";
-			battleP2 = "";
+			event.getChannel().sendMessage("<@" + battleP2 + "> has declined the battle!").queue();
+			resetBattle();
 		}
 
 		if (args[0].startsWith(Bot.prefix)) {
@@ -98,43 +79,19 @@ public class TextCommands extends ListenerAdapter {
 				gif(event);
 				break;
 			case "xp":
-				try {
-					if (args[1].toLowerCase().equals("all")) {
-						EmbedBuilder xp = new EmbedBuilder().setTitle("Level stats");
-						for (RPGProfile p : profiles.values()) {
-							xp.addField("Level " + p.getLevel(),
-									p.getName() + "\n" + p.getXP() + "/" + p.XPThreshold[p.getLevel()] + " XP", true);
-						}
-						xp.setColor(0x005420);
-						event.getChannel().sendMessage(xp.build()).queue();
-					}
-				} catch (IndexOutOfBoundsException e) {
-					event.getJDA().getTextChannelById("703482913403961364").sendMessage(e.toString()).queue();
-				}
+				xp(event);
 				break;
 			case "meme":
 				meme(event);
 				break;
 			case "profile":
-				profiles.get(event.getAuthor().getName()).sendProfile(event);
+				sendProfile(event);
 				break;
 			case "battle":
-				try {
-					battleP2 = event.getMessage().getContentDisplay().substring(9);
-					battleP1 = event.getAuthor().getName();
-					if (!battleP1.equals(battleP2)) {
-						waitingForBattle = true;
-
-						event.getChannel().sendMessage(battleP1 + " has challenged " + battleP2 + " to a battle! Will "
-								+ battleP2 + " accept? (Y/N)").queue();
-					} else {
-						waitingForBattle = false;
-						battleP1 = "";
-						battleP2 = "";
-					}
-				} catch (IndexOutOfBoundsException e) {
-					event.getJDA().getTextChannelById("703482913403961364").sendMessage(e.toString()).queue();
-				}
+				waitForBattle(event);
+				break;
+			case "use":
+				use(event);
 				break;
 
 			}
@@ -146,20 +103,90 @@ public class TextCommands extends ListenerAdapter {
 
 	}
 
+	// Test command to make peter send poggers
+	private void pog(GuildMessageReceivedEvent event) {
+		event.getChannel().sendTyping();
+		event.getChannel().sendMessage("***poggers!***").queue();
+	}
+
+	// Make peter say anyhting!
+	private void print(GuildMessageReceivedEvent event) {
+		if (!event.getAuthor().getId().equals("341259856872996866")) {
+			event.getChannel().sendTyping();
+			try {
+				event.getChannel().sendMessage(event.getMessage().getContentRaw().substring(7)).queue();
+			} catch (IndexOutOfBoundsException e) {
+				// Errors channel
+				event.getJDA().getTextChannelById("703482913403961364").sendMessage(e.toString()).queue();
+				event.getChannel().sendMessage(
+						"Are you trying to bloody print an *empty string*, " + event.getAuthor().getAsMention() + "?")
+				.queue();
+			}
+		}
+	}
+
+	// Send sonic and mario gif
+	private void gif(GuildMessageReceivedEvent event) {
+		event.getJDA().getTextChannelById("687462550589407272").sendMessage("!gif").queue();
+	}
+
+	private void xp(GuildMessageReceivedEvent event) {
+		EmbedBuilder xp = new EmbedBuilder().setTitle("Level stats");
+		for (RPGProfile p : profiles.values()) {
+			xp.addField("Level " + p.getLevel(),
+					p.getName() + "\n" + p.getXP() + "/" + p.XPThreshold[p.getLevel()] + " XP", true);
+		}
+		xp.setColor(0x005420);
+		event.getChannel().sendMessage(xp.build()).queue();
+	}
+
+	private void sendProfile(GuildMessageReceivedEvent event) {
+		profiles.get(event.getAuthor().getId()).sendProfile(event);
+	}
+
+	private void resetBattle() {
+		waitingForBattle = false;
+		battleP1 = "";
+		battleP2 = "";
+	}
+
+	private void waitForBattle(GuildMessageReceivedEvent event) {
+		try {
+			battleP2 = getID(event);
+			battleP1 = event.getAuthor().getId();
+			if (!battleP1.equals(battleP2)) {
+				if (profiles.get(battleP2) != null) {
+					waitingForBattle = true;
+
+					event.getChannel().sendMessage("<@" + battleP1 + "> has challenged <@" + battleP2
+							+ "> to a battle! Will <@" + battleP2 + "> accept? (Y/N)").queue();
+				} else {
+					event.getChannel().sendMessage("<@" + battleP1 + ">, invalid battle request").queue();
+				}
+			} else {
+				event.getChannel().sendMessage("<@" + battleP1 + ">, you cannot challenge yourself to a battle!!!")
+				.queue();
+				resetBattle();
+			}
+		} catch (IndexOutOfBoundsException e) {
+			event.getJDA().getTextChannelById("703482913403961364").sendMessage(e.toString()).queue();
+		}
+	}
+
 	private void executeBattle(GuildMessageReceivedEvent event) {
 		try {
 			// System.out.println("Battle method entered");
 			RPGProfile r = profiles.get(battleP1);
-			BattleInfo result = profiles.get(event.getAuthor().getName()).battle(r);
+			BattleInfo result = profiles.get(event.getAuthor().getId()).battle(r);
 
 			EmbedBuilder info = new EmbedBuilder().setTitle("Battle Result");
-			info.addField("", battleP1 + " rolled a " + result.roll1, false);
-			info.addField("", battleP2 + " rolled a " + result.roll2, false);
+			info.addField("Player 1", "<@" + result.ID1 + "> rolled a " + result.roll1, true);
+			info.addField("Player 2", "<@" + result.ID2 + "> rolled a " + result.roll2, true);
 			if (result.tie) {
 				info.addField("", "It's a tie!", false);
 			} else {
-				info.addField("", result.winner + " won!", false);
-				info.addField("", result.loser + " took " + result.difference + " points of damage!!", false);
+				info.addField("", "Winner: <@" + result.winner + ">!", false);
+				info.addField("", "<@" + result.loser + "> took " + result.difference + " points of damage!!", false);
 				profiles.get(result.loser).takeDamage(result.difference);
 			}
 
@@ -171,37 +198,10 @@ public class TextCommands extends ListenerAdapter {
 			e.printStackTrace();
 		}
 
-		waitingForBattle = false;
-		battleP1 = "";
-		battleP2 = "";
+		resetBattle();
 	}
 
-	// Test command to make peter send poggers
-	private void pog(GuildMessageReceivedEvent event) {
-		event.getChannel().sendTyping();
-		event.getChannel().sendMessage("***poggers!***").queue();
-	}
-
-	private void gif(GuildMessageReceivedEvent event) {
-		event.getJDA().getTextChannelById("687462550589407272").sendMessage("!gif").queue();
-	}
-
-	// Make peter say anyhting!
-	private void print(GuildMessageReceivedEvent event) {
-		if (event.getAuthor().getId() != "341259856872996866") {
-			event.getChannel().sendTyping();
-			try {
-				event.getChannel().sendMessage(event.getMessage().getContentRaw().substring(7)).queue();
-			} catch (IndexOutOfBoundsException e) {
-				// Errors channel
-				event.getJDA().getTextChannelById("703482913403961364").sendMessage(e.toString()).queue();
-				event.getChannel().sendMessage(
-						"Are you trying to bloody print an *empty string*, " + event.getAuthor().getAsMention() + "?")
-						.queue();
-			}
-		}
-	}
-
+	@SuppressWarnings("unchecked")
 	private void meme(GuildMessageReceivedEvent event) {
 		try {
 			JSONParser parser = new JSONParser();
@@ -219,7 +219,6 @@ public class TextCommands extends ListenerAdapter {
 				for (Object o : array) {
 					JSONObject jsonObject = (JSONObject) o;
 
-					String postLink = (String) jsonObject.get("postLink");
 					String title = (String) jsonObject.get("title");
 					String url = (String) jsonObject.get("url");
 
@@ -237,6 +236,10 @@ public class TextCommands extends ListenerAdapter {
 			event.getChannel().sendMessage("Uh-oh, the meme obbied. Try again in a sec").queue();
 			e.printStackTrace();
 		}
+	}
+
+	private void use(GuildMessageReceivedEvent event) {
+
 	}
 
 	// Command info
@@ -268,9 +271,9 @@ public class TextCommands extends ListenerAdapter {
 
 		help.addField("meme", "Send a random meme!", true);
 
-		help.addField("Profile", "Show your current XP, level, and inventory", true);
+		help.addField("profile", "Show your current XP, level, and inventory", true);
 
-		help.addField("xp all", "Shows everybody's current XP and level", true);
+		help.addField("xp", "Shows everybody's current XP and level", true);
 
 		help.addField("battle [@member]", "Challenge someone to a battle!", true);
 
@@ -278,6 +281,10 @@ public class TextCommands extends ListenerAdapter {
 		help.setFooter("Precede each command with '" + Bot.prefix + "' to use it");
 		event.getChannel().sendMessage(help.build()).queue();
 		help.clear();
+	}
+
+	private String getID(GuildMessageReceivedEvent event) {
+		return event.getMessage().getContentRaw().replaceAll("[^0-9]", "");
 	}
 
 }

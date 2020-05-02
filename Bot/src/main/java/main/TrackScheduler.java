@@ -231,10 +231,10 @@ public class TrackScheduler extends AudioEventAdapter {
 
 	public void deletePlaylist(String name, GuildMessageReceivedEvent event) {
 		if (playlists.remove(name) != null) {
-			event.getChannel().sendMessage("\"" + name + "\" successfully deleted").queue();
+			event.getChannel().sendMessage("Playlist *" + name + "* successfully deleted").queue();
 			writePlaylistsToFile();
 		} else {
-			event.getChannel().sendMessage("Could not find playlist \"" + name + "\"").queue();
+			event.getChannel().sendMessage("Could not find playlist *" + name + "*").queue();
 		}
 	}
 

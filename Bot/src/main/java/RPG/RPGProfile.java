@@ -9,19 +9,21 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Random;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed.Field;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 
 public class RPGProfile implements Serializable {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 4346439246860272670L;
 
-	private final int LOOT_CHANCE = 500;
+	private final int LOOT_CHANCE = 200;
 
 	private String name, ID;
 
@@ -80,16 +82,29 @@ public class RPGProfile implements Serializable {
 	}
 
 	private void checkForLoot(GuildMessageReceivedEvent event) {
-		if ((random.nextInt(LOOT_CHANCE)) < 2) {
-			RPGItems item = RPGItems.values()[random.nextInt(RPGItems.values().length)];
+		if ((random.nextInt(LOOT_CHANCE)) < 1) {
+			int rarity = random.nextInt(100);
+
+			RPGItems item = null;
+			if (rarity < ItemRarity.CRINGE.getPercentage()) {
+				item = RPGItemsPool.cringeItems.get(random.nextInt(RPGItemsPool.cringeItems.size()));
+			} else if (rarity < (ItemRarity.CRINGE.getPercentage() + ItemRarity.COMMON.getPercentage())) {
+				item = RPGItemsPool.commonItems.get(random.nextInt(RPGItemsPool.commonItems.size()));
+			} else if (rarity < (ItemRarity.CRINGE.getPercentage() + ItemRarity.COMMON.getPercentage()
+			+ ItemRarity.RARE.getPercentage())) {
+				item = RPGItemsPool.rareItems.get(random.nextInt(RPGItemsPool.rareItems.size()));
+			} else {
+				item = RPGItemsPool.epicItems.get(random.nextInt(RPGItemsPool.epicItems.size()));
+			}
+
 			System.out.println(item.getName());
 			int count = items.get(item) + 1;
 			items.put(item, count);
 
 			EmbedBuilder foundLoot = new EmbedBuilder()
-					.setTitle(event.getAuthor().getName() + " has found a *" + item.getName() + "*!!");
+					.setTitle(event.getAuthor().getName() + " has found a " + item.getEmoji() + "*" + item.getName() + "*!!");
 			foundLoot.addField("", event.getAuthor().getName() + " has found one *" + item.getName()
-					+ "* for a total of *" + count + "*. This is a pog moment!!", false);
+			+ "* for a total of *" + count + "*. This is a pog moment!!", false);
 			foundLoot.setColor(0x005420);
 			event.getChannel().sendMessage(foundLoot.build()).queue();
 		}
@@ -117,7 +132,7 @@ public class RPGProfile implements Serializable {
 	public BattleInfo battle(RPGProfile other) {
 		// System.out.println("Challenger's level " + other.level);
 		// System.out.println("Other person's level " + level);
-		return new BattleInfo(random.nextInt(other.level) + 1, random.nextInt(level) + 1, other.name, name);
+		return new BattleInfo(random.nextInt(other.level) + 1, random.nextInt(level) + 1, other.getID(), ID);
 	}
 
 	public void sendXP(GuildMessageReceivedEvent event) {
@@ -142,11 +157,50 @@ public class RPGProfile implements Serializable {
 		EmbedBuilder profile = new EmbedBuilder().setTitle(event.getAuthor().getName() + "'s Profile");
 		profile.addField("Health", health + "/" + maxHealth + " HP", true);
 		profile.addField("Level " + level, XP + "/" + XPThreshold[level] + " XP", true);
-		profile.addField("", event.getAuthor().getName() + "'s Inventory", false);
+		profile.addField("", event.getAuthor().getName() + "'s Inventory:", false);
+
+		HashSet<Field> cringeItems = new HashSet<Field>();
+		HashSet<Field> commonItems = new HashSet<Field>();
+		HashSet<Field> rareItems = new HashSet<Field>();
+		HashSet<Field> epicItems = new HashSet<Field>();
+
 		for (RPGItems r : items.keySet()) {
 			if (items.get(r) > 0) {
-				profile.addField(Integer.toString(items.get(r)), r.getName(), true);
+				switch (r.getRarity()) {
+				case CRINGE:
+					cringeItems.add(new Field(items.get(r).toString(), r.getName(), true));
+					break;
+				case COMMON:
+					commonItems.add(new Field(items.get(r).toString(), r.getName(), true));
+					break;
+				case RARE:
+					rareItems.add(new Field(items.get(r).toString(), r.getName(), true));
+					break;
+				case EPIC:
+					epicItems.add(new Field(items.get(r).toString(), r.getName(), true));
+					break;
+				}
 			}
+		}
+
+		profile.addField("", ":white_circle: Cringe", false);
+		for (Field f : cringeItems) {
+			profile.addField(f);
+		}
+
+		profile.addField("", ":green_circle: Common", false);
+		for (Field f : commonItems) {
+			profile.addField(f);
+		}
+
+		profile.addField("", ":blue_circle: Rare", false);
+		for (Field f : rareItems) {
+			profile.addField(f);
+		}
+
+		profile.addField("", ":yellow_circle: Epic", false);
+		for (Field f : epicItems) {
+			profile.addField(f);
 		}
 		profile.setColor(0x005420);
 		event.getChannel().sendMessage(profile.build()).queue();
@@ -201,7 +255,7 @@ public class RPGProfile implements Serializable {
 
 	@Override
 	public String toString() {
-		return "[" + name + "\nID: " + ID + "\nLevel: " + level;
+		return "[" + name + "\nID: " + ID + "\nLevel: " + level + "]";
 	}
 
 	/* Getters and Setters */

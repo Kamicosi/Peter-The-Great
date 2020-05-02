@@ -2,12 +2,12 @@ package RPG;
 
 public class BattleInfo {
 	public int roll1, roll2, difference;
-	public String name1, name2, winner, loser;
+	public String ID1, ID2, winner, loser;
 	public boolean tie;
 
-	public BattleInfo(int roll1, int roll2, String name1, String name2) {
-		this.name1 = name1;
-		this.name2 = name2;
+	public BattleInfo(int roll1, int roll2, String ID1, String ID2) {
+		this.ID1 = ID1;
+		this.ID2 = ID2;
 		this.roll1 = roll1;
 		this.roll2 = roll2;
 		difference = Math.abs(roll1 - roll2);
@@ -16,11 +16,11 @@ public class BattleInfo {
 		} else {
 			tie = false;
 			if (roll1 < roll2) {
-				winner = name2;
-				loser = name1;
+				winner = ID2;
+				loser = ID1;
 			} else {
-				winner = name1;
-				loser = name2;
+				winner = ID1;
+				loser = ID2;
 			}
 		}
 	}

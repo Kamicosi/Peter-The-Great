@@ -30,16 +30,36 @@ public enum RPGItems implements Serializable {
 	SOUNDCLOUD_TRACK("Soundcloud Track", ItemRarity.RARE, ItemType.HEAL),
 	TENOR_SAXOPHONE("Tenor Saxophone", ItemRarity.RARE, ItemType.HEAL),
 	TRUMPET("Trumpet", ItemRarity.COMMON, ItemType.DAMAGE),
-	WENDYS_NEW_BACON_SWISS_BURGER("Wendy's New Bacon Swiss Burger™", ItemRarity.EPIC, ItemType.HEAL);
+	WENDYS_NEW_BACON_SWISS_BURGER("Wendy's New Bacon Swiss Burger", ItemRarity.EPIC, ItemType.HEAL);
 
 	private String name;
 	private ItemRarity rarity;
 	private ItemType type;
+	private String emoji;
 
 	RPGItems(String name, ItemRarity rarity, ItemType type) {
 		this.name = name;
 		this.rarity = rarity;
 		this.type = type;
+
+		switch (rarity) {
+		case CRINGE:
+			emoji = ":white_circle:";
+			break;
+		case COMMON:
+			emoji = ":green_circle:";
+			break;
+		case RARE:
+			emoji = ":blue_circle:";
+			break;
+		case EPIC:
+			emoji = ":yellow_circle:";
+			break;
+		default:
+			emoji = ":black_joker:";
+			break;
+		}
+
 	}
 
 	public String getName() {
@@ -52,6 +72,10 @@ public enum RPGItems implements Serializable {
 
 	public ItemType getType() {
 		return type;
+	}
+
+	public String getEmoji() {
+		return emoji;
 	}
 
 }
