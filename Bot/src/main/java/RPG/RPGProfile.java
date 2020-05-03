@@ -23,13 +23,14 @@ public class RPGProfile implements Serializable {
 	 */
 	private static final long serialVersionUID = 4346439246860272670L;
 
-	private final int LOOT_CHANCE = 200;
+	private final int LOOT_CHANCE = 300;
 
 	private String name, ID;
 
 	private int XP;
 	private int level;
 	private int health, maxHealth;
+	private int emmys;
 	// 40 Levels
 	public int[] XPThreshold;
 	private int[] maxHealthAmount;
@@ -39,6 +40,10 @@ public class RPGProfile implements Serializable {
 
 	public void initialize() {
 		random = new Random();
+
+		// TEMPORARY TO GET RID OF EMMYS ITEM
+		// TODO: TURN INTO CURRENCY
+		items.remove(RPGItems.EMMYS);
 
 		XPThreshold = new int[] { 0, 50, 100, 150, 200, 300, 400, 500, 700, 900, 1200, 1500, 1800, 2200, 2600, 3000,
 				3500, 4000, 4500, 5000, 6000, 7000, 8000, 9000, 10000, 15000, 20000, 30000, 40000, 50000, 60000, 70000,
@@ -75,6 +80,9 @@ public class RPGProfile implements Serializable {
 	public void handleEvent(GuildMessageReceivedEvent event) {
 		XP++;
 		if (event.getMessage().getContentRaw().contains("$")) {
+			if (event.getMessage().getContentRaw().equals("XP$Grind")) {
+				XP++;
+			}
 			XP++;
 		}
 		checkForLoot(event);
@@ -97,12 +105,16 @@ public class RPGProfile implements Serializable {
 				item = RPGItemsPool.epicItems.get(random.nextInt(RPGItemsPool.epicItems.size()));
 			}
 
+			System.out.println("Rarity generated: " + rarity);
+			System.out.println("Item given: " + item.getName());
+			System.out.println("Item rarity: " + item.getRarity());
+
 			System.out.println(item.getName());
 			int count = items.get(item) + 1;
 			items.put(item, count);
 
 			EmbedBuilder foundLoot = new EmbedBuilder()
-					.setTitle(event.getAuthor().getName() + " has found a " + item.getEmoji() + "*" + item.getName() + "*!!");
+					.setTitle(event.getAuthor().getName() + " has found a  " + item.getEmoji() + "*" + item.getName() + "*!!");
 			foundLoot.addField("", event.getAuthor().getName() + " has found one *" + item.getName()
 			+ "* for a total of *" + count + "*. This is a pog moment!!", false);
 			foundLoot.setColor(0x005420);

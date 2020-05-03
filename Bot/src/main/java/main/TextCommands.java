@@ -52,10 +52,10 @@ public class TextCommands extends ListenerAdapter {
 
 		// Battle!
 		if (waitingForBattle && event.getAuthor().getId().equals(battleP2)
-				&& event.getMessage().getContentRaw().equals("Y")) {
+				&& event.getMessage().getContentRaw().toLowerCase().equals("y")) {
 			executeBattle(event);
 		} else if (waitingForBattle && event.getAuthor().getId().equals(battleP2) // Decline battle
-				&& event.getMessage().getContentRaw().equals("N")) {
+				&& event.getMessage().getContentRaw().toLowerCase().equals("n")) {
 			event.getChannel().sendMessage("<@" + battleP2 + "> has declined the battle!").queue();
 			resetBattle();
 		}
@@ -276,6 +276,8 @@ public class TextCommands extends ListenerAdapter {
 		help.addField("xp", "Shows everybody's current XP and level", true);
 
 		help.addField("battle [@member]", "Challenge someone to a battle!", true);
+
+		help.addField("XP$Grind", "The dedicated grinding keyword", true);
 
 		help.setColor(0x005420);
 		help.setFooter("Precede each command with '" + Bot.prefix + "' to use it");

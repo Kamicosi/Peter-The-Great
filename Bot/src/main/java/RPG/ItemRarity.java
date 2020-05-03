@@ -4,18 +4,12 @@ import java.io.Serializable;
 
 public enum ItemRarity implements Serializable {
 
-	CRINGE(5, 40), COMMON(15, 40), RARE(30, 15), EPIC(50, 5);
+	CRINGE(40), COMMON(30), RARE(20), EPIC(10);
 
-	private int power;
 	private int percentage;
 
-	ItemRarity(int power, int percentage) {
-		this.power = power;
+	ItemRarity(int percentage) {
 		this.percentage = percentage;
-	}
-
-	public int getPower() {
-		return power;
 	}
 
 	public int getPercentage() {
