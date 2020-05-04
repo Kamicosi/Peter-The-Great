@@ -4,16 +4,28 @@ import java.io.Serializable;
 
 public enum ItemRarity implements Serializable {
 
-	CRINGE(40), COMMON(30), RARE(20), EPIC(10);
+	CRINGE(50, 5, ":white_circle:"), COMMON(35, 15, ":green_circle:"), RARE(10, 25, ":blue_circle:"), EPIC(5, 50, ":yellow_circle:");
 
 	private int percentage;
+	private int power;
+	private String emoji;
 
-	ItemRarity(int percentage) {
+	ItemRarity(int percentage, int power, String emoji) {
 		this.percentage = percentage;
+		this.power = power;
+		this.emoji = emoji;
 	}
 
 	public int getPercentage() {
 		return percentage;
+	}
+
+	public int getPower() {
+		return power;
+	}
+
+	public String getEmoji() {
+		return emoji;
 	}
 
 }

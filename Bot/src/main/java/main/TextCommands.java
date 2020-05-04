@@ -10,7 +10,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import RPG.BattleInfo;
+import RPG.ItemType;
 import RPG.ProfileSaver;
+import RPG.RPGItems;
+import RPG.RPGItemsPool;
 import RPG.RPGProfile;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
@@ -18,15 +21,15 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class TextCommands extends ListenerAdapter {
 
-	private static HashMap<String, RPGProfile> profiles;
+	private HashMap<String, RPGProfile> profiles;
 
 	private boolean waitingForBattle;
 	private String battleP1, battleP2;
 
-	public TextCommands() {
+	public TextCommands(HashMap<String, RPGProfile> profiles) {
 		resetBattle();
 
-		profiles = RPGProfile.readProfilesFromFile();
+		this.profiles = profiles;
 
 		for (RPGProfile p : profiles.values()) {
 			p.initialize();
@@ -64,10 +67,14 @@ public class TextCommands extends ListenerAdapter {
 			System.out.println("Command received: " + args[0].substring(1).toLowerCase());
 			switch (args[0].substring(1).toLowerCase()) {
 			case "pog":
-				pog(event);
+				if (!isDead(event)) {
+					pog(event);
+				}
 				break;
 			case "print":
-				print(event);
+				if (!isDead(event)) {
+					print(event);
+				}
 				break;
 			case "help":
 				help(event);
@@ -76,19 +83,25 @@ public class TextCommands extends ListenerAdapter {
 				textHelp(event);
 				break;
 			case "gif":
-				gif(event);
+				if (!isDead(event)) {
+					gif(event);
+				}
 				break;
 			case "xp":
 				xp(event);
 				break;
 			case "meme":
-				meme(event);
+				if (!isDead(event)) {
+					meme(event);
+				}
 				break;
 			case "profile":
 				sendProfile(event);
 				break;
 			case "battle":
-				waitForBattle(event);
+				if (!isDead(event)) {
+					waitForBattle(event);
+				}
 				break;
 			case "use":
 				use(event);
@@ -123,6 +136,7 @@ public class TextCommands extends ListenerAdapter {
 				.queue();
 			}
 		}
+
 	}
 
 	// Send sonic and mario gif
@@ -179,7 +193,7 @@ public class TextCommands extends ListenerAdapter {
 			RPGProfile r = profiles.get(battleP1);
 			BattleInfo result = profiles.get(event.getAuthor().getId()).battle(r);
 
-			EmbedBuilder info = new EmbedBuilder().setTitle("Battle Result");
+			EmbedBuilder info = new EmbedBuilder().setTitle(":game_die: Battle Result");
 			info.addField("Player 1", "<@" + result.ID1 + "> rolled a " + result.roll1, true);
 			info.addField("Player 2", "<@" + result.ID2 + "> rolled a " + result.roll2, true);
 			if (result.tie) {
@@ -187,9 +201,10 @@ public class TextCommands extends ListenerAdapter {
 			} else {
 				info.addField("", "Winner: <@" + result.winner + ">!", false);
 				info.addField("", "<@" + result.loser + "> took " + result.difference + " points of damage!!", false);
-				profiles.get(result.loser).takeDamage(result.difference);
+				if (profiles.get(result.loser).takeDamage(result.difference) == 0) {
+					event.getChannel().sendMessage("<@" + result.loser + "> has died!!").queue();
+				}
 			}
-
 			info.setColor(0x005420);
 			event.getChannel().sendMessage(info.build()).queue();
 
@@ -239,7 +254,56 @@ public class TextCommands extends ListenerAdapter {
 	}
 
 	private void use(GuildMessageReceivedEvent event) {
+		String[] args = event.getMessage().getContentRaw().split(",");
+		RPGItems item = RPGItemsPool.allItems.get(args[0].substring(5).strip());
+		String userID = event.getMessage().getAuthor().getId();
 
+		if (item != null && profiles.get(userID).items.get(item) > 0) {
+			try {
+				EmbedBuilder action = new EmbedBuilder();
+				if (item.getType().equals(ItemType.HEAL)) {
+					/* heal */
+					profiles.get(userID).heal(item.getPower());
+
+					/* Heal message */
+					action.setTitle(event.getAuthor().getName() + " Healed!!");
+					action.addField("", "<@" + userID + "> used a " + item.getName() + " and healed " + item.getPower() + " points!!", false);
+					action.addField("", "HP: " + profiles.get(userID).getHealth(), false);
+				} else { // Type is DAMAGE
+					/* take damage */
+					String targetID = getID(event);
+					profiles.get(targetID).takeDamage(item.getPower());
+					if (profiles.get(targetID).getHP() == 0) {
+						event.getChannel().sendMessage("<@" + targetID + "> has died!!").queue();
+					}
+
+					/* Attack message */
+					action.setTitle(event.getAuthor().getName() + " Attacked " + profiles.get(targetID).getName() + "!!!");
+					action.addField("", "<@" + userID + "> used a " + item.getName() + " and attacked <@" + targetID + "> dealing " + item.getPower() + " damage!!", false);
+					action.addField("", "<@" + targetID + ">'s HP: " + profiles.get(targetID).getHealth(), false);
+				}
+				/* decrease number of item */
+				int count = (profiles.get(userID).items.get(item)) - 1;
+				profiles.get(userID).items.put(item,  count);
+
+				action.setColor(0x005420);
+				event.getChannel().sendMessage(action.build()).queue();
+			} catch (NullPointerException e) {
+				event.getChannel().sendMessage("<@" + event.getAuthor().getId() + ">, you need to @ someone to use an attack item").queue();
+			}
+		} else {
+			event.getChannel().sendMessage("Could not find item *" + args[0].substring(5).strip() + "* in your inventory, <@" + userID + ">").queue();
+		}
+	}
+
+	private boolean isDead(GuildMessageReceivedEvent event) {
+		if (profiles.get(event.getAuthor().getId()).getHP() > 0) {
+			return false;
+		} else {
+			event.getChannel().sendMessage("Sorry <@" + event.getAuthor().getId()
+					+ ">, you cannot use this command when you're dead. Use an item to heal or level up first then try again!").queue();
+			return true;
+		}
 	}
 
 	// Command info
@@ -278,6 +342,8 @@ public class TextCommands extends ListenerAdapter {
 		help.addField("battle [@member]", "Challenge someone to a battle!", true);
 
 		help.addField("XP$Grind", "The dedicated grinding keyword", true);
+
+		help.addField("use [item], [@member]", "Use an item. You will need to @ someone if it's an attack item", true);
 
 		help.setColor(0x005420);
 		help.setFooter("Precede each command with '" + Bot.prefix + "' to use it");

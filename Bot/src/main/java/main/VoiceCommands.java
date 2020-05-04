@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -14,6 +15,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
+import RPG.RPGProfile;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.VoiceChannel;
@@ -30,9 +32,13 @@ public class VoiceCommands extends ListenerAdapter {
 
 	public static TextChannel mostRecentTextChannel;
 
+	private HashMap<String, RPGProfile> profiles;
+
 	private final int MAX_COMMAND_LENGTH = 100;
 
-	public VoiceCommands() {
+	public VoiceCommands(HashMap<String, RPGProfile> profiles) {
+		this.profiles = profiles;
+
 		playerManager = new DefaultAudioPlayerManager();
 		AudioSourceManagers.registerRemoteSources(playerManager);
 		AudioSourceManagers.registerLocalSource(playerManager);
@@ -51,30 +57,40 @@ public class VoiceCommands extends ListenerAdapter {
 				mostRecentTextChannel = event.getChannel();
 				switch (args[0].substring(1).toLowerCase()) {
 				case "add":
-					try {
-						playURL(event, event.getMessage().getContentRaw().substring(5));
-					} catch (IndexOutOfBoundsException e) {
-						event.getJDA().getTextChannelById("703482913403961364").sendMessage(e.toString()).queue();
-						event.getChannel().sendMessage(event.getAuthor().getAsMention()
-								+ ", you wanker!! You have to supply a valid SoundCloud/YouTube URL or search term!!!")
-						.queue();
+					if (!isDead(event)) {
+						try {
+							playURL(event, event.getMessage().getContentRaw().substring(5));
+						} catch (IndexOutOfBoundsException e) {
+							event.getJDA().getTextChannelById("703482913403961364").sendMessage(e.toString()).queue();
+							event.getChannel().sendMessage(event.getAuthor().getAsMention()
+									+ ", you wanker!! You have to supply a valid SoundCloud/YouTube URL or search term!!!")
+							.queue();
+						}
 					}
 					break;
 				case "stop":
-					stop();
+					if (!isDead(event)) {
+						stop();
+					}
 					break;
 				case "queue":
-					trackScheduler.sendQueue(event, true);
+					if (!isDead(event)) {
+						trackScheduler.sendQueue(event, true);
+					}
 					break;
 				case "skip":
-					trackScheduler.skipTrack(event);
+					if (!isDead(event)) {
+						trackScheduler.skipTrack(event);
+					}
 					// trackScheduler.sendQueue(event, false);
 					break;
 				case "voicehelp":
 					voiceHelp(event);
 					break;
 				case "p":
-					handlePlaylistStuff(event, args);
+					if (!isDead(event)) {
+						handlePlaylistStuff(event, args);
+					}
 					break;
 				}
 			} else {
@@ -200,6 +216,16 @@ public class VoiceCommands extends ListenerAdapter {
 			}
 		} catch (IndexOutOfBoundsException e) {
 			System.out.println("Caught indexoutofboundsexception in handlePlaylistStuff");
+		}
+	}
+
+	private boolean isDead(GuildMessageReceivedEvent event) {
+		if (profiles.get(event.getAuthor().getId()).getHP() > 0) {
+			return false;
+		} else {
+			event.getChannel().sendMessage("Sorry <@" + event.getAuthor().getId()
+					+ ">, you cannot use this command when you're dead. Use an item to heal or level up first then try again!").queue();
+			return true;
 		}
 	}
 

@@ -14,7 +14,7 @@ public class ProfileSaver implements Runnable {
 	public void run() {
 		while (true) {
 			try {
-				Thread.sleep(8 * 60 * 1000); // 8 minutes
+				Thread.sleep(7 * 60 * 1000); // 7 minutes
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
