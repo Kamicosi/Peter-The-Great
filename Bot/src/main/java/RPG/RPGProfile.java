@@ -21,8 +21,8 @@ public class RPGProfile implements Serializable {
 	 */
 	private static final long serialVersionUID = 4346439246860272670L;
 
-	private final int LOOT_CHANCE = 200;
-	private final int EMMY_CHANCE = 100;
+	private final int LOOT_CHANCE = 180;
+	private final int EMMY_CHANCE = 90;
 
 	private String name, ID;
 
@@ -133,7 +133,7 @@ public class RPGProfile implements Serializable {
 			level++;
 			XP = 0;
 
-			health = maxHealthAmount[level];
+			health+= 5;
 			maxHealth = maxHealthAmount[level];
 
 			/* Level up message */
@@ -264,6 +264,36 @@ public class RPGProfile implements Serializable {
 		profile.setColor(0x005420);
 		event.getChannel().sendMessage(profile.build()).queue();
 	}
+
+	public RPGItems purchaseItem(int amount, ItemRarity rarity) {
+		if (emmys - amount >= 0 && rarity != null) {
+			emmys-=amount;
+			RPGItems item;
+			switch (rarity) {
+			case CRINGE:
+				item = RPGItemsPool.cringeItems.get(random.nextInt(RPGItemsPool.cringeItems.size()));
+				break;
+			case COMMON:
+				item = RPGItemsPool.commonItems.get(random.nextInt(RPGItemsPool.commonItems.size()));
+				break;
+			case RARE:
+				item = RPGItemsPool.rareItems.get(random.nextInt(RPGItemsPool.rareItems.size()));
+				break;
+			case EPIC:
+				item = RPGItemsPool.epicItems.get(random.nextInt(RPGItemsPool.epicItems.size()));
+				break;
+			default:
+				item = null;
+				break;
+			}
+			int count = items.get(item) + 1;
+			items.put(item, count);
+			return item;
+		} else {
+			return null;
+		}
+	}
+
 
 	/* Write the HashMap of RPGProfiles to profiles.txt */
 

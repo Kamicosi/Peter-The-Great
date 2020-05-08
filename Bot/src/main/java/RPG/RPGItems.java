@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public enum RPGItems implements Serializable {
 
-	ANTIMAYAN_SCRIPTURE("Antimayan Scripture",":scroll:",  ItemRarity.COMMON, ItemType.DAMAGE),
+	ANTIMAYAN_SCRIPTURE("Antimayan Scripture",":scroll:",  ItemRarity.COMMON, ItemType.HEAL),
 	BAT("Bat","<:bat:692184939009015819>",  ItemRarity.CRINGE, ItemType.DAMAGE),
 	BRICK("Brick", "<:bricks:706228336602382376>", ItemRarity.CRINGE, ItemType.DAMAGE),
 	BRUH_MOMENT("Bruh Moment","<:bruh:706228762110328844>", ItemRarity.RARE, ItemType.DAMAGE),
@@ -19,7 +19,7 @@ public enum RPGItems implements Serializable {
 	GAMER_CAVE_BATHTUB("Gamer Cave Bathtub",":bath:", ItemRarity.RARE, ItemType.DAMAGE),
 	GAY_ASS("Gay Ass",":rainbow_flag:", ItemRarity.CRINGE, ItemType.HEAL),
 	GINGA_GUNGA("Ginga Gunga",":baby:", ItemRarity.RARE, ItemType.DAMAGE),
-	HYPE_MAN("Hype Man","<:hypeman:706233138128486420>", ItemRarity.COMMON, ItemType.DAMAGE),
+	HYPE_MAN("Hype Man","<:hypeman:706233138128486420>", ItemRarity.COMMON, ItemType.HEAL),
 	JAM_MAN("Jam Man","<:jamman:706233198669070417>", ItemRarity.EPIC, ItemType.HEAL),
 	JAPAN("Japan",":japanese_castle:", ItemRarity.COMMON, ItemType.DAMAGE),
 	MAN_IN_MOTORIZED_WHEELCHAIR("Man in Motorized Wheelchair",":man_in_motorized_wheelchair:", ItemRarity.COMMON, ItemType.DAMAGE),
@@ -39,14 +39,15 @@ public enum RPGItems implements Serializable {
 	ROCKET("Rocket",":rocket:", ItemRarity.RARE, ItemType.DAMAGE),
 	SHIT("Shit",":shit:", ItemRarity.CRINGE, ItemType.DAMAGE),
 	SIMP_LICENSE("Simp License",":credit_card:", ItemRarity.CRINGE, ItemType.DAMAGE),
-	SONIC_AND_MARIO_FUCKING_GIF("Sonic and Mario Fucking Gif","<:marioandsonicfuckingemoji:706233352247836742>", ItemRarity.RARE, ItemType.HEAL),
+	SONIC_AND_MARIO_FUCKING_GIF("Sonic and Mario Fucking Gif","<:marioandsonicfuckingemoji:706233352247836742>", ItemRarity.RARE, ItemType.DAMAGE),
 	SOUNDCLOUD_TRACK("Soundcloud Track","<:soundcloud:706234434906751026>", ItemRarity.RARE, ItemType.HEAL),
 	SPONGEBOB_MOVIE("Spongebob Movie","<:SpongebobMovie:706579086125826140>", ItemRarity.CRINGE, ItemType.HEAL),
-	TENOR_SAXOPHONE("Tenor Saxophone","<:tenor:706233290658414702>", ItemRarity.RARE, ItemType.HEAL),
-	TRUMPET("Trumpet","<:trumpet:706234420859764879>", ItemRarity.COMMON, ItemType.DAMAGE),
+	TENOR_SAXOPHONE("Tenor Saxophone","<:tenor:706233290658414702>", ItemRarity.RARE, ItemType.DAMAGE),
+	TRUMPET("Trumpet","<:trumpet:706234420859764879>", ItemRarity.COMMON, ItemType.HEAL),
 	WENDYS_NEW_BACON_SWISS_BURGER("Wendy's New Bacon Swiss Burger","<:wendy:706234404602642443>", ItemRarity.EPIC, ItemType.HEAL),
 	WELL_DONE("Well Done","<:WellDone:692188733541187635>", ItemRarity.EPIC, ItemType.HEAL),
-	ZE_SUPER_SAIYAN("Ze Super Saiyan","<:ZeSuperSaiyan:706572491803590748>", ItemRarity.EPIC, ItemType.DAMAGE);
+	ZECHOGGERS("ZeChoggers",":ZeChoggers:", ItemRarity.COMMON, ItemType.HEAL),
+	ZE_SUPER_SAIYAN("Ze Super Saiyan","<:ZeSuperSaiyan:706572491803590748>", ItemRarity.EPIC, ItemType.DAMAGE, 150);
 
 	private String name;
 	private ItemRarity rarity;

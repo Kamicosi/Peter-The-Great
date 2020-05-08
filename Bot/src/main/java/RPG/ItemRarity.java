@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public enum ItemRarity implements Serializable {
 
-	CRINGE(50, 5, ":white_circle:"), COMMON(35, 15, ":green_circle:"), RARE(10, 25, ":blue_circle:"), EPIC(5, 50, ":yellow_circle:");
+	CRINGE(50, 5, ":white_circle:"), COMMON(35, 15, ":green_circle:"), RARE(10, 35, ":blue_circle:"), EPIC(5, 60, ":yellow_circle:");
 
 	private int percentage;
 	private int power;

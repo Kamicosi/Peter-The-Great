@@ -12,7 +12,8 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 
 public class Bot {
 
-	public static String prefix = "$";
+	public static final String prefix = "$";
+	public static final int COLOR = 0x005420;
 
 	public static void main(String[] args) {
 

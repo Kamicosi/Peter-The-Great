@@ -237,10 +237,15 @@ public class VoiceCommands extends ListenerAdapter {
 			String playlist = event.getMessage().getContentRaw().substring(8).strip();
 			result.setTitle(playlist);
 			int i = 1;
+			String songs = "";
 			for (Song s : trackScheduler.getSongsFromPlaylist(playlist)) {
-				result.addField("#" + i, s.title, true);
+				songs += i + ": " + s.title + "\n";
 				i++;
+				if (songs.length() > 1000) {
+					break;
+				}
 			}
+			result.addField("", songs, false);
 			result.setFooter("Use $p play " + playlist + " to add this playlist to the queue");
 			result.setColor(0x005420);
 			event.getChannel().sendMessage(result.build()).queue();

@@ -1,9 +1,12 @@
 package main;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Scanner;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -15,6 +18,7 @@ import RPG.ProfileSaver;
 import RPG.RPGItems;
 import RPG.RPGItemsPool;
 import RPG.RPGProfile;
+import RPG.Shop;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -26,6 +30,8 @@ public class TextCommands extends ListenerAdapter {
 	private boolean waitingForBattle;
 	private String battleP1, battleP2;
 
+	private Shop shop;
+
 	public TextCommands(HashMap<String, RPGProfile> profiles) {
 		resetBattle();
 
@@ -35,8 +41,9 @@ public class TextCommands extends ListenerAdapter {
 			p.initialize();
 		}
 
-		Thread saveProfilesThread = new Thread(new ProfileSaver(profiles));
-		saveProfilesThread.start();
+		shop = new Shop(profiles);
+
+		new Thread(new ProfileSaver(profiles)).start();
 	}
 
 	@Override
@@ -106,6 +113,12 @@ public class TextCommands extends ListenerAdapter {
 			case "use":
 				use(event);
 				break;
+			case "image":
+				image(event);
+				break;
+			case "shop":
+				shop.handleShopStuff(event);
+				break;
 
 			}
 		} else if (event.getMessage().getContentRaw().toLowerCase().contains("peter"))
@@ -150,7 +163,7 @@ public class TextCommands extends ListenerAdapter {
 			xp.addField("Level " + p.getLevel(),
 					p.getName() + "\n" + p.getXP() + "/" + p.XPThreshold[p.getLevel()] + " XP", true);
 		}
-		xp.setColor(0x005420);
+		xp.setColor(Bot.COLOR);
 		event.getChannel().sendMessage(xp.build()).queue();
 	}
 
@@ -253,6 +266,70 @@ public class TextCommands extends ListenerAdapter {
 		}
 	}
 
+	private void image(GuildMessageReceivedEvent event) {
+		String searchTerm = event.getMessage().getContentRaw().substring(7);
+		String imageUrl = returnBingImage(searchTerm);
+		if (imageUrl == null) {
+
+			event.getChannel().sendMessage("Idk what happened but there was an error").queue();
+		} else if (imageUrl == "didnt find results") {
+			event.getChannel().sendMessage("Didn't find results for " + searchTerm).queue();
+		} else {
+			EmbedBuilder image = new EmbedBuilder();
+			System.out.println(imageUrl);
+			image.setImage(imageUrl);
+
+			image.setColor(0x005420);
+			event.getChannel().sendMessage(image.build()).queue();
+
+		}
+	}
+
+	private String returnBingImage(String term) {
+		String searchTerm = term.strip().replace(" ", "+");
+		try {
+			URL url = new URL("https://www.bing.com/images/search?q=" + searchTerm + "&safesearch=Off&FORM=HDRSC2");
+			Scanner scanner = new Scanner(url.openStream());
+			StringBuffer pageContent = new StringBuffer();
+			while (scanner.hasNext()) {
+				String line = scanner.nextLine();
+				pageContent.append(line);
+			}
+			scanner.close();
+			// System.out.println(pageContent);
+			int index = pageContent.indexOf("<a class=\"thumb\" target=\"_blank\" href=\"");
+			if (index != -1) {
+				String image = pageContent.substring(index + 39);
+				image = image.substring(0, image.indexOf("h=") - 2);
+				return image;
+			} else {
+				// Try again with bing near:
+				url = new URL("https://www.bing.com/images/search?q=bing+near:" + searchTerm + "&safesearch=Off&FORM=HDRSC2");
+				scanner = new Scanner(url.openStream());
+				pageContent = new StringBuffer();
+				while (scanner.hasNext()) {
+					String line = scanner.nextLine();
+					pageContent.append(line);
+				}
+				scanner.close();
+				// System.out.println(pageContent);
+				index = pageContent.indexOf("<a class=\"thumb\" target=\"_blank\" href=\"");
+				if (index != -1) {
+					String image = pageContent.substring(index + 39);
+					image = image.substring(0, image.indexOf("h=") - 2);
+					return image;
+				} else {
+					return "didnt find results";
+				}
+			}
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 	private void use(GuildMessageReceivedEvent event) {
 		String[] args = event.getMessage().getContentRaw().split(",");
 		RPGItems item = RPGItemsPool.allItems.get(args[0].substring(5).strip());
@@ -267,7 +344,8 @@ public class TextCommands extends ListenerAdapter {
 
 					/* Heal message */
 					action.setTitle(event.getAuthor().getName() + " Healed!!");
-					action.addField("", "<@" + userID + "> used a " + item.getName() + " and healed " + item.getPower() + " points!!", false);
+					action.addField("", "<@" + userID + "> used a " + item.getName() + " and healed " + item.getPower()
+					+ " points!!", false);
 					action.addField("", "HP: " + profiles.get(userID).getHealth(), false);
 				} else { // Type is DAMAGE
 					/* take damage */
@@ -278,21 +356,28 @@ public class TextCommands extends ListenerAdapter {
 					}
 
 					/* Attack message */
-					action.setTitle(event.getAuthor().getName() + " Attacked " + profiles.get(targetID).getName() + "!!!");
-					action.addField("", "<@" + userID + "> used a " + item.getName() + " and attacked <@" + targetID + "> dealing " + item.getPower() + " damage!!", false);
+					action.setTitle(
+							event.getAuthor().getName() + " Attacked " + profiles.get(targetID).getName() + "!!!");
+					action.addField("", "<@" + userID + "> used a " + item.getName() + " and attacked <@" + targetID
+							+ "> dealing " + item.getPower() + " damage!!", false);
 					action.addField("", "<@" + targetID + ">'s HP: " + profiles.get(targetID).getHealth(), false);
 				}
 				/* decrease number of item */
 				int count = (profiles.get(userID).items.get(item)) - 1;
-				profiles.get(userID).items.put(item,  count);
+				profiles.get(userID).items.put(item, count);
 
 				action.setColor(0x005420);
 				event.getChannel().sendMessage(action.build()).queue();
 			} catch (NullPointerException e) {
-				event.getChannel().sendMessage("<@" + event.getAuthor().getId() + ">, you need to @ someone to use an attack item").queue();
+				event.getChannel()
+				.sendMessage(
+						"<@" + event.getAuthor().getId() + ">, you need to @ someone to use an attack item")
+				.queue();
 			}
 		} else {
-			event.getChannel().sendMessage("Could not find item *" + args[0].substring(5).strip() + "* in your inventory, <@" + userID + ">").queue();
+			event.getChannel().sendMessage(
+					"Could not find item *" + args[0].substring(5).strip() + "* in your inventory, <@" + userID + ">")
+			.queue();
 		}
 	}
 
@@ -301,10 +386,12 @@ public class TextCommands extends ListenerAdapter {
 			return false;
 		} else {
 			event.getChannel().sendMessage("Sorry <@" + event.getAuthor().getId()
-					+ ">, you cannot use this command when you're dead. Use an item to heal or level up first then try again!").queue();
+					+ ">, you cannot use this command when you're dead. Use an item to heal or level up first then try again!")
+			.queue();
 			return true;
 		}
 	}
+
 
 	// Command info
 	private void help(GuildMessageReceivedEvent event) {
@@ -316,7 +403,7 @@ public class TextCommands extends ListenerAdapter {
 				+ "' followed by these commands to see all the cool things I can do!", false);
 		help.addField("texthelp", "Display all the text-related commands", true);
 		help.addField("voicehelp", "Display all voice-related commands", true);
-		help.setColor(0x005420);
+		help.setColor(Bot.COLOR);
 		help.setFooter("Created by Cosimos Cendo in Spring 2020");
 
 		event.getChannel().sendMessage(help.build()).queue();
@@ -335,6 +422,8 @@ public class TextCommands extends ListenerAdapter {
 
 		help.addField("meme", "Send a random meme!", true);
 
+		help.addField("image [term]", "Returns the top Bing image serach result for that term", true);
+
 		help.addField("profile", "Show your current XP, level, and inventory", true);
 
 		help.addField("xp", "Shows everybody's current XP and level", true);
@@ -345,7 +434,9 @@ public class TextCommands extends ListenerAdapter {
 
 		help.addField("use [item], [@member]", "Use an item. You will need to @ someone if it's an attack item", true);
 
-		help.setColor(0x005420);
+		help.addField("shop list", "Shows Peter's shop", true);
+
+		help.setColor(Bot.COLOR);
 		help.setFooter("Precede each command with '" + Bot.prefix + "' to use it");
 		event.getChannel().sendMessage(help.build()).queue();
 		help.clear();
