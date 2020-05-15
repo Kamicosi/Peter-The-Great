@@ -5,6 +5,7 @@ import java.io.Serializable;
 public enum RPGItems implements Serializable {
 
 	ANTIMAYAN_SCRIPTURE("Antimayan Scripture",":scroll:",  ItemRarity.COMMON, ItemType.HEAL),
+	ARMSTRONG_COCK("Armstrong Cock",":eggplant:",  ItemRarity.RARE, ItemType.DAMAGE, 50),
 	BAT("Bat","<:bat:692184939009015819>",  ItemRarity.CRINGE, ItemType.DAMAGE),
 	BRICK("Brick", "<:bricks:706228336602382376>", ItemRarity.CRINGE, ItemType.DAMAGE),
 	BRUH_MOMENT("Bruh Moment","<:bruh:706228762110328844>", ItemRarity.RARE, ItemType.DAMAGE),
@@ -15,13 +16,14 @@ public enum RPGItems implements Serializable {
 	CUM_ZONE("Cum Zone","<:weebshit:706234993986502730>", ItemRarity.RARE, ItemType.HEAL),
 	DIAMOND("Diamond",":gem:", ItemRarity.RARE, ItemType.HEAL),
 	EDMODO_ASSIGNMENT("Edmodo Assignment","<:edmodo:706229211567882311>", ItemRarity.COMMON, ItemType.DAMAGE),
-	FIREBALL("Fireball",":fire:", ItemRarity.COMMON, ItemType.DAMAGE),
+	FIREBALL("Fireball","<:fireball:708372623159066654>", ItemRarity.COMMON, ItemType.DAMAGE),
 	GAMER_CAVE_BATHTUB("Gamer Cave Bathtub",":bath:", ItemRarity.RARE, ItemType.DAMAGE),
 	GAY_ASS("Gay Ass",":rainbow_flag:", ItemRarity.CRINGE, ItemType.HEAL),
 	GINGA_GUNGA("Ginga Gunga",":baby:", ItemRarity.RARE, ItemType.DAMAGE),
 	HYPE_MAN("Hype Man","<:hypeman:706233138128486420>", ItemRarity.COMMON, ItemType.HEAL),
 	JAM_MAN("Jam Man","<:jamman:706233198669070417>", ItemRarity.EPIC, ItemType.HEAL),
 	JAPAN("Japan",":japanese_castle:", ItemRarity.COMMON, ItemType.DAMAGE),
+	LAW_OF_EQUIVALENT_EXCHANGE("Law of Equivalent Exchange",":alembic:", ItemRarity.RARE, ItemType.HEAL),
 	MAN_IN_MOTORIZED_WHEELCHAIR("Man in Motorized Wheelchair",":man_in_motorized_wheelchair:", ItemRarity.COMMON, ItemType.DAMAGE),
 	MOCHOU("Mochou","<:mochouwallposter:706233407255871549>", ItemRarity.RARE, ItemType.HEAL),
 	NIGGA_CAT("Nigga Cat","<:DumbassCatThatEverybodyLikes:706237169282318506>", ItemRarity.EPIC, ItemType.DAMAGE),

@@ -19,9 +19,6 @@ public class Shop {
 		String[] args = event.getMessage().getContentRaw().split(" ");
 		try {
 			switch(args[1].toLowerCase()) {
-			case "list":
-				sendShop(event);
-				break;
 			case "buy":
 				switch(args[2].toLowerCase()) {
 				case "cringe":
@@ -40,7 +37,7 @@ public class Shop {
 				break;
 			}
 		} catch (IndexOutOfBoundsException e) {
-
+			sendShop(event);
 		}
 	}
 
