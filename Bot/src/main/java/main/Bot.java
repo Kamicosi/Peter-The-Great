@@ -22,7 +22,7 @@ public class Bot {
 			gatewayIntents.add(c);
 		}
 
-		JDABuilder builder = JDABuilder.create("Njk2NzU4NjA1MjY5MDQxMjU0.XqR5iA.SPanCzX33nBc1Up-kaP8a9CiKbo",
+		JDABuilder builder = JDABuilder.create("Insert-token-here",
 				gatewayIntents);
 
 		builder.setActivity(Activity.playing("Peter RPG"));
